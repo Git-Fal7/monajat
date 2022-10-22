@@ -1,0 +1,39 @@
+#!/bin/sh
+
+if [ ! -f $HOME/.config/monajat/monajat.conf ]; then
+	mkdir $HOME/.config/monajat
+	cp /usr/share/monajat/monajat.conf $HOME/.config/monajat/monajat.conf
+fi
+
+CONFIG=$HOME/.config/monajat/monajat.conf
+
+while true; do
+	LANG=$(grep LANG "${CONFIG}" | cut -b 6-)
+	TIME=$(grep TIME "${CONFIG}" | cut -b 6-)
+	DIR=/usr/share/monajat/lang/${LANG}
+
+	FILE=$(ls "${DIR}" | shuf -n 1)
+ 	echo ${FILE}
+	isText=false
+	isMerit=false
+	text=""
+	merits=""
+	while read -r l; do
+		if [ "${l}" = "@text" ]; then
+			isText=true			
+		elif [ "${l}" = "@merits" ]; then
+			isText=false
+			isMerit=true
+		else
+			if [ ${isText} = true ]; then
+				text="${text}\n${l}"
+			elif [ ${isMerit} = true ]; then
+				merits="${merits}\n${l}"
+			fi
+		fi
+	done < "${DIR}"/"${FILE}"
+	text=$(echo ${text} | cut -b 3-)
+	
+	notify-send --app-name=Monajat --icon=/usr/share/monajat/monajat.svg "Monajat" "${text}${merits}"
+	sleep ${TIME}
+done
